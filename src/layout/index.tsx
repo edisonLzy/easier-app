@@ -1,61 +1,52 @@
-import { LikeOutlined } from '@ant-design/icons';
-import ProLayout, { PageContainer } from '@ant-design/pro-layout';
-import ProSkeleton from '@ant-design/pro-skeleton';
-import MenuHeaderRender from '@/components/layout/MenuHeaderRender';
-import RigthContentRender from '@/components/layout/RightContentRender';
-import { Link, useHistory,Route,Switch} from 'react-router-dom';
+import BasicLayout from './basicLayout';
+import { Button, Result } from 'antd';
 import routes from '@/routes';
-import { useState,Suspense,useMemo, lazy } from 'react';
+import { flatten } from '@/helpers';
+import { Suspense, useMemo,useContext } from 'react';
+import { Route, Switch,Redirect, useLocation } from 'react-router-dom';
+import Fallback from '@/components/layout/Fallback';
+import {loginCtx} from '@/components/permission/withLogin';
+import { LOGIN_PATH } from '@/constant';
+function useRenderRoute() {
+	const flattenRoutes = flatten(routes, 'children');
+	const {isLogin} = useContext(loginCtx);
+	const routesRender = useMemo(() => {
+		const withAuth = flattenRoutes.filter(route => route.auth);
+		return withAuth.map(({ component: Component, path, exact = true, sensitive = true }) => {
+			return <Route
+				key={path}
+				path={path}
+				exact={exact}
+				sensitive={sensitive}
+				render={({location}) => {
+					console.log(isLogin);
+					
+					return (isLogin || path === LOGIN_PATH) ? <Component/>:<Redirect
+						to={{
+							pathname:LOGIN_PATH,
+							state:location.pathname
+						}}/>;
+				}}
+			></Route>;
+		});
+	}, [flattenRoutes,isLogin]);
 
-//TODO add SettingDrawer
+	const NotFound = <Route
+		key='*'
+		component={() => <Result
+			status="404"
+			title="404"
+			subTitle="Sorry, the page you visited does not exist."
+			extra={<Button type="primary">Back Home</Button>}
+		/>}></Route>;
 
-function useHeaderTitle(){
-	const [title, setTitle] = useState('EasierApp');
-	return [title, setTitle] as const;
+	return routesRender.concat(NotFound);
 }
 export default () => {
-	const [title, setTitle] = useHeaderTitle();
-	const history = useHistory();
-	return (
-		<ProLayout
-			fixedHeader
-			fixSiderbar
-			menuHeaderRender={MenuHeaderRender}
-			onMenuHeaderClick={() => history.push('/')}
-			menuItemRender={({name,path}) => {
-				return <Link 
-					onClick={()=>{
-						setTitle(name!);
-					}}
-					to={path!}>
-					{name}
-				</Link>;
-			}}
-			rightContentRender={RigthContentRender}
-			route={{
-				path:'/',
-				routes:routes
-			}}
-		>
-			<Switch>
-				<Route path='/login' render={()=>{
-					return <div>hah</div>;
-				}}></Route>;
-			</Switch>
-			{/* <PageContainer
-				header={{
-					title:title,
-				}}
-			
-			>
-				<Suspense fallback={<ProSkeleton />}>
-					<Switch>
-						<Route path='/login' render={()=>{
-							return <div>hah</div>;
-						}}></Route>;
-					</Switch>
-				</Suspense>
-			</PageContainer> */}
-		</ProLayout>
-	);
+	const routesRender = useRenderRoute();	
+	return <Suspense fallback={<Fallback/>}>
+		<Switch>
+			{routesRender}
+		</Switch>
+	</Suspense>;
 };

@@ -8,6 +8,7 @@
     "lint": "eslint --fix"
   },
   "dependencies": {
+    "@ant-design/pro-form": "^1.22.1",
     "@babel/core": "^7.13.16",
     "@babel/preset-react": "^7.13.13",
     "@types/react-router-dom": "^5.1.7",
