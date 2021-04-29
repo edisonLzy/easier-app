@@ -1,9 +1,17 @@
-import {Button,Space} from 'antd'
-export default ()=>{
-  return  <>
-  <Space></Space>
-  <Button type="primary" style={{ marginLeft: 8 }}>
-  Primary Button
-</Button>
-  </>
-}
+import Layout from '@/layout';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { UseRequestProvider } from 'ahooks';
+import axios from 'axios';
+export default () => {
+	return (
+		<Router>
+			<UseRequestProvider
+				value={{
+					requestMethod:(...args)=>axios.request(...args)
+				}}
+			>
+				<Layout />
+			</UseRequestProvider>
+		</Router>
+	);
+};

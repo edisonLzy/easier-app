@@ -1,7 +1,7 @@
 export default function Home() {
-    return (
-        <div>
+	return (
+		<div>
              this is 主页
-        </div>
-    )
+		</div>
+	);
 }
